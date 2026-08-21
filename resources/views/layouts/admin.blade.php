@@ -44,6 +44,9 @@
         </div>
     </div>
 
+    <!-- Status Modal Component -->
+    <x-modal.status />
+
     <!-- SweetAlert Helper -->
     <script>
         function confirmDelete(url) {

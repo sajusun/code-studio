@@ -7,8 +7,33 @@
          
          init() {
              this.fetchNotifications();
-             // Real-time Polling Interval every 8 seconds
-             setInterval(() => this.fetchNotifications(), 8000);
+             
+             // Laravel Reverb WebSockets Real-time Listener
+             if (typeof window.Echo !== 'undefined') {
+                 const userId = '{{ auth()->id() }}';
+                 
+                 // Listen on Private User Channel
+                 window.Echo.private(`App.Models.User.${userId}`)
+                     .notification((notification) => {
+                         this.pushNotification(notification);
+                     });
+
+                 // Listen on Public NotificationSent Event Channel
+                 window.Echo.channel('notifications')
+                     .listen('.NotificationSent', (data) => {
+                         this.pushNotification(data);
+                     });
+             }
+
+             // Fallback Polling (30s) when WebSocket is reconnecting
+             setInterval(() => this.fetchNotifications(), 30000);
+         },
+
+         pushNotification(data) {
+             if (!this.notifications.some(n => n.id === data.id)) {
+                 this.notifications.unshift(data);
+                 this.unreadCount++;
+             }
          },
 
          async fetchNotifications() {
@@ -68,17 +93,55 @@
              });
          },
 
+         confirmDeleteAll() {
+             if (typeof Swal !== 'undefined') {
+                 Swal.fire({
+                     title: 'Clear All Notifications?',
+                     text: 'Are you sure you want to delete all notifications? This action cannot be undone.',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#ef4444',
+                     cancelButtonColor: '#64748b',
+                     confirmButtonText: 'Yes, clear all!'
+                 }).then((result) => {
+                     if (result.isConfirmed) {
+                         this.deleteAll();
+                     }
+                 });
+             } else {
+                 this.deleteAll();
+             }
+         },
+
          async deleteAll() {
-             if (confirm('Are you sure you want to delete all notifications?')) {
-                 this.notifications = [];
-                 this.unreadCount = 0;
-                 fetch('{{ route('admin.notifications.destroy-all') }}', {
+             this.notifications = [];
+             this.unreadCount = 0;
+             try {
+                 const res = await fetch('{{ route('admin.notifications.destroy-all') }}', {
                      method: 'DELETE',
                      headers: { 
                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
                          'Accept': 'application/json'
                      }
                  });
+                 const data = await res.json();
+                 if (data.success && typeof Swal !== 'undefined') {
+                     Swal.fire({
+                         icon: 'success',
+                         title: 'Cleared!',
+                         text: 'All notifications cleared successfully.',
+                         timer: 2000,
+                         showConfirmButton: false
+                     });
+                 }
+             } catch (e) {
+                 if (typeof Swal !== 'undefined') {
+                     Swal.fire({
+                         icon: 'error',
+                         title: 'Error!',
+                         text: 'An error occurred while clearing notifications.'
+                     });
+                 }
              }
          }
      }">
@@ -125,7 +188,7 @@
                 <button @click="markAllAsRead()" x-show="unreadCount > 0" class="text-xs font-semibold text-theme-primary hover:underline transition-all cursor-pointer">
                     Mark all read
                 </button>
-                <button @click="deleteAll()" x-show="notifications.length > 0" class="text-xs font-semibold text-rose-500 hover:text-rose-600 hover:underline flex items-center gap-1 cursor-pointer" title="Delete All Notifications">
+                <button @click="confirmDeleteAll()" x-show="notifications.length > 0" class="text-xs font-semibold text-rose-500 hover:text-rose-600 hover:underline flex items-center gap-1 cursor-pointer" title="Delete All Notifications">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     Clear All
                 </button>
