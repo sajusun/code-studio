@@ -1,12 +1,12 @@
 # Enterprise Admin & Microservice Dashboard Architecture
 
-![Laravel Version](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
-![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![Laravel Version](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38BDF8?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Alpine.js](https://img.shields.io/badge/Alpine.js-3.x-8BC0D0?style=for-the-badge&logo=alpine.js&logoColor=white)
 ![Laravel Reverb](https://img.shields.io/badge/WebSockets-Laravel_Reverb-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
 
-An enterprise-grade, high-performance Laravel 11 Admin & Software Showcase Platform built with a dynamic **5-Theme Engine**, **Laravel Reverb WebSockets** for zero-latency push notifications, a **Polymorphic Media System**, **Spatie Activity Audit Logs**, and a responsive Blade component framework.
+An enterprise-grade, high-performance **Laravel 12** Admin & Software Showcase Platform built with a dynamic **5-Theme Engine**, **Laravel Reverb WebSockets** for zero-latency push notifications, a **Polymorphic Media System**, **Spatie Activity Audit Logs**, and a responsive Blade component framework.
 
 ---
 
@@ -14,7 +14,7 @@ An enterprise-grade, high-performance Laravel 11 Admin & Software Showcase Platf
 
 ```mermaid
 graph TD
-    Client[Browser / Admin UI] -->|HTTP / REST| Laravel[Laravel 11 App Engine]
+    Client[Browser / Admin UI] -->|HTTP / REST| Laravel[Laravel 12 App Engine]
     Client <-->|WebSocket 0ms Push| Reverb[Laravel Reverb Server]
     
     Laravel --> Controllers[Admin & API Controllers]
@@ -37,13 +37,14 @@ graph TD
 
 | Requirement / Component | Technology | Version |
 | :--- | :--- | :--- |
-| **PHP Runtime** | PHP | `^8.2` |
-| **Backend Framework** | Laravel Framework | `^11.x` |
+| **PHP Runtime** | PHP | `^8.3` |
+| **Backend Framework** | Laravel Framework | `^12.0` (v12.x) |
 | **WebSocket Engine** | Laravel Reverb | `^1.11` |
+| **API Authentication** | Laravel Sanctum | `^4.0` |
 | **Frontend Styling** | Vanilla CSS + Tailwind CSS | `v4.0` |
 | **Interactivity** | Alpine.js | `^3.x` |
 | **Asset Bundler** | Vite | `^6.x` / `^8.x` |
-| **RBAC Authorization** | Spatie Laravel Permission | `^6.0` |
+| **RBAC Authorization** | Spatie Laravel Permission | `^7.4` |
 | **Audit Logging** | Spatie Activity Log | `^5.0` |
 | **Broadcasting Client** | Laravel Echo + Pusher JS | `^2.0` / `^8.4` |
 
