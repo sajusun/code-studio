@@ -1,0 +1,1441 @@
+{
+  "info": {
+    "_postman_id": "hms-api-collection-v2",
+    "name": "HMS - Hotel Management System API",
+    "description": "Laravel HMS backend API collection for `/api/v1`.\n\nImport one environment from this folder, then run `Auth / Get CSRF cookie` and `Auth / Login` before protected endpoints.\n\nSeeded admin credentials: `admin@hms.com` / `password`.\nCollection scripts auto-fill future booking dates and capture IDs from common responses.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "app_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@hms.com",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "password",
+      "type": "string"
+    },
+    {
+      "key": "xsrf_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "room_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "room_type_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "guest_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "reservation_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "stay_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "invoice_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "conversation_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "check_in_date",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "check_out_date",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invoice_total",
+      "value": "100.00",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const daysAhead = (n) => {",
+          "  const d = new Date();",
+          "  d.setDate(d.getDate() + n);",
+          "  return d.toISOString().split('T')[0];",
+          "};",
+          "if (!pm.collectionVariables.get('check_in_date')) pm.collectionVariables.set('check_in_date', daysAhead(7));",
+          "if (!pm.collectionVariables.get('check_out_date')) pm.collectionVariables.set('check_out_date', daysAhead(10));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Cookie/session auth via Laravel Sanctum. Postman will store the cookies after these requests.",
+      "item": [
+        {
+          "name": "Get CSRF cookie",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{app_url}}/sanctum/csrf-cookie"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cookie = pm.cookies.get('XSRF-TOKEN');",
+                  "if (cookie) pm.collectionVariables.set('xsrf_token', decodeURIComponent(cookie));",
+                  "pm.test('CSRF cookie request completed', () => pm.expect(pm.response.code).to.be.oneOf([204, 200]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Logged in', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));",
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.user && json.user.id) pm.collectionVariables.set('user_id', json.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/user"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "List public room types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/public/room-types"
+          }
+        },
+        {
+          "name": "Search public availability",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/public/availability?check_in_date={{check_in_date}}&check_out_date={{check_out_date}}&guests_count=2",
+              "host": [
+                "{{base_url}}/public/availability"
+              ],
+              "query": [
+                {
+                  "key": "check_in_date",
+                  "value": "{{check_in_date}}"
+                },
+                {
+                  "key": "check_out_date",
+                  "value": "{{check_out_date}}"
+                },
+                {
+                  "key": "guests_count",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data[0] && json.data[0].id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('room_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create public reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/public/reservations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Public\",\n  \"last_name\": \"Guest\",\n  \"email\": \"public.guest.{{$timestamp}}@example.com\",\n  \"phone\": \"+1-555-0144\",\n  \"room_id\": \"{{room_id}}\",\n  \"check_in_date\": \"{{check_in_date}}\",\n  \"check_out_date\": \"{{check_out_date}}\",\n  \"guests_count\": 2,\n  \"special_requests\": \"Near elevator if available\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data.id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('reservation_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create public support contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/public/support/contact",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_email\": \"guest.{{$timestamp}}@example.com\",\n  \"customer_name\": \"Website Guest\",\n  \"subject\": \"Booking question\",\n  \"message\": \"Do you offer airport pickup?\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data.id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('conversation_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subscribe newsletter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/newsletter/subscribe",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"subscriber.{{$timestamp}}@example.com\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workflow",
+      "description": "Run after Auth / Get CSRF cookie and Auth / Login.",
+      "item": [
+        {
+          "name": "1. Search availability",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/availability?check_in_date={{check_in_date}}&check_out_date={{check_out_date}}&guests_count=2",
+              "host": [
+                "{{base_url}}/availability"
+              ],
+              "query": [
+                {
+                  "key": "check_in_date",
+                  "value": "{{check_in_date}}"
+                },
+                {
+                  "key": "check_out_date",
+                  "value": "{{check_out_date}}"
+                },
+                {
+                  "key": "guests_count",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data[0] && json.data[0].id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('room_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Create guest",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/guests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Alice\",\n  \"last_name\": \"Traveler\",\n  \"email\": \"alice.traveler.{{$timestamp}}@example.com\",\n  \"phone\": \"+1-555-0199\",\n  \"document_number\": \"P99887766\",\n  \"notes\": \"Created from Postman workflow\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data.id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('guest_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Create reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/reservations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"room_id\": \"{{room_id}}\",\n  \"guest_id\": \"{{guest_id}}\",\n  \"check_in_date\": \"{{check_in_date}}\",\n  \"check_out_date\": \"{{check_out_date}}\",\n  \"guests_count\": 2,\n  \"special_requests\": \"Late check-in requested\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data.id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('reservation_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Check in",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/reservations/{{reservation_id}}/check-in"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Checked in', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.id) pm.collectionVariables.set('stay_id', json.data.id);",
+                  "if (json.data && json.data.invoice && json.data.invoice.id) pm.collectionVariables.set('invoice_id', json.data.invoice.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Add service charge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/invoices/{{invoice_id}}/services",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Room service breakfast\",\n  \"unit_price\": 25,\n  \"quantity\": 2,\n  \"type\": \"service\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6. Get invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/invoices/{{invoice_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.total_amount) pm.collectionVariables.set('invoice_total', json.data.total_amount);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Check out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/stays/{{stay_id}}/check-out"
+          }
+        },
+        {
+          "name": "8. Record payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/invoices/{{invoice_id}}/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"{{invoice_total}}\",\n  \"method\": \"card\",\n  \"transaction_reference\": \"TXN-{{$timestamp}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "List room types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/room-types"
+          }
+        },
+        {
+          "name": "List rooms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/rooms"
+          }
+        },
+        {
+          "name": "List rooms by status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rooms?status=available",
+              "host": [
+                "{{base_url}}/rooms"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "available",
+                  "description": "available | reserved | occupied | maintenance"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update room status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/rooms/{{room_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"maintenance\"\n}"
+            },
+            "description": "Status values: available, reserved, occupied, maintenance"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Guests",
+      "item": [
+        {
+          "name": "List guests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/guests"
+          }
+        },
+        {
+          "name": "Create guest",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/guests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Doe\",\n  \"email\": \"jane.doe.{{$timestamp}}@example.com\",\n  \"phone\": \"+1-555-0100\",\n  \"document_number\": \"P12345678\",\n  \"notes\": \"VIP guest\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data.id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('guest_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get guest",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/guests/{{guest_id}}"
+          }
+        },
+        {
+          "name": "Update guest",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/guests/{{guest_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+1-555-9999\",\n  \"notes\": \"Updated contact number\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Search availability",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/availability?check_in_date={{check_in_date}}&check_out_date={{check_out_date}}&room_type_id={{room_type_id}}&guests_count=2",
+              "host": [
+                "{{base_url}}/availability"
+              ],
+              "query": [
+                {
+                  "key": "check_in_date",
+                  "value": "{{check_in_date}}"
+                },
+                {
+                  "key": "check_out_date",
+                  "value": "{{check_out_date}}"
+                },
+                {
+                  "key": "room_type_id",
+                  "value": "{{room_type_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "guests_count",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data[0] && json.data[0].id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('room_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/reservations"
+          }
+        },
+        {
+          "name": "Create reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/reservations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"room_id\": \"{{room_id}}\",\n  \"guest_id\": \"{{guest_id}}\",\n  \"check_in_date\": \"{{check_in_date}}\",\n  \"check_out_date\": \"{{check_out_date}}\",\n  \"guests_count\": 2,\n  \"special_requests\": \"High floor preferred\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data.id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('reservation_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get reservation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/reservations/{{reservation_id}}"
+          }
+        },
+        {
+          "name": "Cancel reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/reservations/{{reservation_id}}/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stays",
+      "item": [
+        {
+          "name": "List stays",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/stays"
+          }
+        },
+        {
+          "name": "Get stay",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/stays/{{stay_id}}"
+          }
+        },
+        {
+          "name": "Check in from reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/reservations/{{reservation_id}}/check-in",
+            "description": "Creates a stay and draft invoice. Room status becomes occupied."
+          }
+        },
+        {
+          "name": "Check out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/stays/{{stay_id}}/check-out",
+            "description": "Completes stay, issues invoice if draft, and frees the room."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "List invoices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/invoices"
+          }
+        },
+        {
+          "name": "Get invoice",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/invoices/{{invoice_id}}"
+          }
+        },
+        {
+          "name": "Add service charge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/invoices/{{invoice_id}}/services",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Spa treatment\",\n  \"unit_price\": 75,\n  \"quantity\": 1,\n  \"type\": \"service\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Issue invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/invoices/{{invoice_id}}/issue",
+            "description": "Manually issue a draft invoice. Checkout also issues automatically."
+          }
+        },
+        {
+          "name": "Record payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/invoices/{{invoice_id}}/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"method\": \"card\",\n  \"transaction_reference\": \"TXN-12345\"\n}"
+            },
+            "description": "Payment methods: cash, card, bank_transfer, other"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get site settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/settings/site"
+          }
+        },
+        {
+          "name": "Update site settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/settings/site",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"HMS\",\n  \"title\": \"HMS Admin\",\n  \"description\": \"Hotel management and guest booking platform\",\n  \"tagline\": \"Comfort, handled cleanly\",\n  \"seo_keywords\": \"hotel,booking,reservations\",\n  \"logo_url\": \"\",\n  \"favicon_url\": \"\",\n  \"owner_name\": \"Hotel Owner\",\n  \"owner_email\": \"owner@example.com\",\n  \"owner_phone\": \"+1-555-0102\",\n  \"support_email\": \"support@example.com\",\n  \"support_phone\": \"+1-555-0103\",\n  \"support_hours\": \"9am-5pm\",\n  \"support_url\": \"https://example.com/support\",\n  \"newsletter_enabled\": true,\n  \"newsletter_from_name\": \"HMS\",\n  \"newsletter_from_email\": \"newsletter@example.com\",\n  \"newsletter_reply_to_email\": \"support@example.com\",\n  \"newsletter_footer_text\": \"You are receiving this because you subscribed.\",\n  \"newsletter_manage_url\": \"https://example.com/newsletter/manage\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Newsletter",
+      "item": [
+        {
+          "name": "Subscribe",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/newsletter/subscribe",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"subscriber.{{$timestamp}}@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List subscribers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/newsletter/subscribers?q=subscriber&per_page=10",
+              "host": [
+                "{{base_url}}/newsletter/subscribers"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "subscriber",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Support",
+      "item": [
+        {
+          "name": "List conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/support/conversations?status=open&q=booking&per_page=10",
+              "host": [
+                "{{base_url}}/support/conversations"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "booking",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/support/conversations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_email\": \"guest.{{$timestamp}}@example.com\",\n  \"customer_name\": \"Desk Guest\",\n  \"subject\": \"Invoice question\",\n  \"message\": \"Could you resend my invoice?\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const value = json.data && json.data.id;",
+                  "  if (value !== undefined && value !== null) pm.collectionVariables.set('conversation_id', value);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/support/conversations/{{conversation_id}}"
+          }
+        },
+        {
+          "name": "Update conversation status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/support/conversations/{{conversation_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"pending\"\n}"
+            },
+            "description": "Status values: open, pending, closed"
+          }
+        },
+        {
+          "name": "Reply to conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/support/conversations/{{conversation_id}}/reply",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Thanks for reaching out. We are checking this now.\",\n  \"subject\": \"Re: Invoice question\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/notifications"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data[0] && json.data[0].id) pm.collectionVariables.set('notification_id', json.data[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark notification as read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/notifications/{{notification_id}}/read"
+          }
+        },
+        {
+          "name": "Mark all notifications as read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}",
+                "description": "Set by Auth / Get CSRF cookie"
+              }
+            ],
+            "url": "{{base_url}}/notifications/read-all"
+          }
+        }
+      ]
+    }
+  ]
+}

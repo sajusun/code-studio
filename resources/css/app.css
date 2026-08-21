@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ==========================================================================
+   DYNAMIC 5-THEME CSS VARIABLES ENGINE (Tailwind CSS v4)
+   ========================================================================== */
+
+/* 1. Emerald Slate (Default) */
+:root, [data-theme="emerald_slate"] {
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-sidebar: #0f172a;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-sidebar: #94a3b8;
+    --text-sidebar-active: #ffffff;
+    --border-color: #e2e8f0;
+    --color-primary: #10b981;
+    --color-primary-hover: #059669;
+    --color-primary-light: #d1fae5;
+    --color-primary-text: #065f46;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* 2. Royal Indigo */
+[data-theme="royal_indigo"] {
+    --bg-main: #f3f4f6;
+    --bg-card: #ffffff;
+    --bg-sidebar: #1e1b4b;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --text-sidebar: #a5b4fc;
+    --text-sidebar-active: #ffffff;
+    --border-color: #e5e7eb;
+    --color-primary: #6366f1;
+    --color-primary-hover: #4f46e5;
+    --color-primary-light: #e0e7ff;
+    --color-primary-text: #3730a3;
+    --card-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.07);
+}
+
+/* 3. Midnight Neon (Dark Mode) */
+[data-theme="midnight_neon"] {
+    --bg-main: #090d16;
+    --bg-card: #111827;
+    --bg-sidebar: #030712;
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --text-sidebar: #9ca3af;
+    --text-sidebar-active: #06b6d4;
+    --border-color: #1f2937;
+    --color-primary: #06b6d4;
+    --color-primary-hover: #0891b2;
+    --color-primary-light: #155e75;
+    --color-primary-text: #cffafe;
+    --card-shadow: 0 4px 20px rgba(6, 182, 212, 0.15);
+}
+
+/* 4. Sunset Amber */
+[data-theme="sunset_amber"] {
+    --bg-main: #fffbeb;
+    --bg-card: #ffffff;
+    --bg-sidebar: #27272a;
+    --text-main: #18181b;
+    --text-muted: #71717a;
+    --text-sidebar: #d4d4d8;
+    --text-sidebar-active: #f59e0b;
+    --border-color: #fef3c7;
+    --color-primary: #f59e0b;
+    --color-primary-hover: #d97706;
+    --color-primary-light: #fef3c7;
+    --color-primary-text: #92400e;
+    --card-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.08);
+}
+
+/* 5. Oceanic Breeze */
+[data-theme="oceanic_breeze"] {
+    --bg-main: #f0fdfa;
+    --bg-card: #ffffff;
+    --bg-sidebar: #134e4a;
+    --text-main: #042f2e;
+    --text-muted: #5eead4;
+    --text-sidebar: #99f6e4;
+    --text-sidebar-active: #ffffff;
+    --border-color: #ccfbf1;
+    --color-primary: #0d9488;
+    --color-primary-hover: #0f766e;
+    --color-primary-light: #ccfbf1;
+    --color-primary-text: #115e59;
+    --card-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.08);
+}
+
+/* Utility Theme Helper Classes */
+.bg-theme-main { background-color: var(--bg-main); }
+.bg-theme-card { background-color: var(--bg-card); }
+.bg-theme-sidebar { background-color: var(--bg-sidebar); }
+.text-theme-main { color: var(--text-main); }
+.text-theme-muted { color: var(--text-muted); }
+.text-theme-sidebar { color: var(--text-sidebar); }
+.border-theme { border-color: var(--border-color); }
+.bg-theme-primary { background-color: var(--color-primary); }
+.bg-theme-primary-hover:hover { background-color: var(--color-primary-hover); }
+.text-theme-primary { color: var(--color-primary); }
+
+/* Global Cursor Pointer Rules for Interactive Controls */
+button, 
+[type='button'], 
+[type='reset'], 
+[type='submit'], 
+a, 
+label[for],
+select {
+    cursor: pointer;
+}
+
