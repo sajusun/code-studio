@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, HasMedia;
 
     protected $fillable = [
         'title',
@@ -55,6 +56,38 @@ class Product extends Model
                 $product->slug = Str::slug($product->title) . '-' . Str::random(5);
             }
         });
+    }
+
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        $media = $this->firstMedia('thumbnail');
+        if ($media) {
+            return asset('storage/' . $media->path);
+        }
+
+        if (!empty($this->thumbnail)) {
+            return Str::startsWith($this->thumbnail, ['http://', 'https://']) 
+                ? $this->thumbnail 
+                : asset('storage/' . $this->thumbnail);
+        }
+
+        return null;
+    }
+
+    public function getGalleryUrlsAttribute(): array
+    {
+        $galleryMedia = $this->mediaCollection('gallery')->get();
+        if ($galleryMedia->isNotEmpty()) {
+            return $galleryMedia->map(fn($m) => asset('storage/' . $m->path))->toArray();
+        }
+
+        if (is_array($this->screenshots) && count($this->screenshots) > 0) {
+            return array_map(function($path) {
+                return Str::startsWith($path, ['http://', 'https://']) ? $path : asset('storage/' . $path);
+            }, $this->screenshots);
+        }
+
+        return [];
     }
 
     public function getTypeBadgeClassAttribute(): string

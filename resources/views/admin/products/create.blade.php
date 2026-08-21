@@ -119,7 +119,7 @@
         </div>
 
         <!-- FORM CONTAINER -->
-        <form method="POST" action="{{ route('admin.products.store') }}" class="bg-theme-card p-6 md:p-8 rounded-2xl border border-theme shadow-xs space-y-6">
+        <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="bg-theme-card p-6 md:p-8 rounded-2xl border border-theme shadow-xs space-y-6">
             @csrf
 
             <!-- Hidden Inputs for Dynamic Arrays -->
@@ -224,8 +224,8 @@
             <!-- STEP 2: DEMOS & MEDIA ASSETS -->
             <div x-show="step === 2" x-transition class="space-y-6">
                 <div class="border-b border-theme pb-4">
-                    <h3 class="text-base font-bold text-theme-main">Step 2: Live Preview Demos & Screenshots</h3>
-                    <p class="text-xs text-theme-muted">Configure live web demo, video walkthroughs, and screenshot gallery.</p>
+                    <h3 class="text-base font-bold text-theme-main">Step 2: Live Preview Demos & Media Uploads</h3>
+                    <p class="text-xs text-theme-muted">Configure live web demo, video walkthroughs, and upload media via polymorphic media system.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -270,17 +270,32 @@
                         <input type="url" name="testflight_url" placeholder="https://testflight.apple.com/join/..." class="w-full px-4 py-2.5 text-sm rounded-xl bg-theme-main border border-theme text-theme-main focus:outline-hidden focus:border-theme-primary">
                     </div>
 
-                    <!-- Main Thumbnail -->
+                    <!-- Polymorphic Media File Uploaders -->
+                    <div class="md:col-span-2 p-5 rounded-2xl bg-theme-main/50 border border-theme space-y-4">
+                        <h4 class="text-xs font-bold text-theme-main uppercase tracking-wider">Polymorphic Media System Uploads</h4>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-theme-main mb-1.5">Product Thumbnail Image Upload (Polymorphic Media)</label>
+                            <x-form.file name="thumbnail_file" accept="image/*" />
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-theme-main mb-1.5">Product Screenshots Gallery Upload (Multiple Files)</label>
+                            <x-form.file name="screenshots_files[]" multiple accept="image/*" />
+                        </div>
+                    </div>
+
+                    <!-- Main Thumbnail URL Fallback -->
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-theme-main uppercase tracking-wider mb-2">Main Product Thumbnail Image URL</label>
+                        <label class="block text-xs font-bold text-theme-main uppercase tracking-wider mb-2">Or External Thumbnail Image URL</label>
                         <input type="url" name="thumbnail" placeholder="https://images.unsplash.com/photo-..." class="w-full px-4 py-2.5 text-sm rounded-xl bg-theme-main border border-theme text-theme-main focus:outline-hidden focus:border-theme-primary">
                     </div>
 
                     <!-- Multi-Screenshot URLs Array -->
                     <div class="md:col-span-2 space-y-3">
                         <div class="flex items-center justify-between">
-                            <label class="block text-xs font-bold text-theme-main uppercase tracking-wider">Product Screenshots Gallery URLs</label>
-                            <button type="button" @click="addScreenshot()" class="text-xs font-bold text-theme-primary hover:underline">+ Add Another Screenshot</button>
+                            <label class="block text-xs font-bold text-theme-main uppercase tracking-wider">Or External Product Screenshots Gallery URLs</label>
+                            <button type="button" @click="addScreenshot()" class="text-xs font-bold text-theme-primary hover:underline">+ Add Another Screenshot URL</button>
                         </div>
                         
                         <template x-for="(url, index) in screenshots" :key="index">

@@ -116,7 +116,7 @@
         </div>
 
         <!-- FORM CONTAINER -->
-        <form method="POST" action="{{ route('admin.products.update', $product) }}" class="bg-theme-card p-6 md:p-8 rounded-2xl border border-theme shadow-xs space-y-6">
+        <form method="POST" action="{{ route('admin.products.update', $product) }}" enctype="multipart/form-data" class="bg-theme-card p-6 md:p-8 rounded-2xl border border-theme shadow-xs space-y-6">
             @csrf
             @method('PUT')
 
@@ -222,8 +222,8 @@
             <!-- STEP 2: DEMOS & MEDIA ASSETS -->
             <div x-show="step === 2" x-transition class="space-y-6">
                 <div class="border-b border-theme pb-4">
-                    <h3 class="text-base font-bold text-theme-main">Step 2: Live Preview Demos & Screenshots</h3>
-                    <p class="text-xs text-theme-muted">Configure live web demo, video walkthroughs, and screenshot gallery.</p>
+                    <h3 class="text-base font-bold text-theme-main">Step 2: Live Preview Demos & Media Uploads</h3>
+                    <p class="text-xs text-theme-muted">Configure live web demo, video walkthroughs, and upload media via polymorphic media system.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -268,9 +268,37 @@
                         <input type="url" name="testflight_url" value="{{ old('testflight_url', $product->testflight_url) }}" class="w-full px-4 py-2.5 text-sm rounded-xl bg-theme-main border border-theme text-theme-main focus:outline-hidden focus:border-theme-primary">
                     </div>
 
+                    <!-- Polymorphic Media File Uploaders -->
+                    <div class="md:col-span-2 p-5 rounded-2xl bg-theme-main/50 border border-theme space-y-4">
+                        <h4 class="text-xs font-bold text-theme-main uppercase tracking-wider">Polymorphic Media System Uploads</h4>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-theme-main mb-1.5">Product Thumbnail Image Upload (Polymorphic Media)</label>
+                            <x-form.file name="thumbnail_file" accept="image/*" />
+                            @if($product->thumbnail_url)
+                                <div class="mt-2 flex items-center gap-3">
+                                    <img src="{{ $product->thumbnail_url }}" class="w-12 h-12 rounded-xl object-cover border border-theme" alt="Current Thumbnail">
+                                    <span class="text-xs text-theme-muted">Current product thumbnail</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-theme-main mb-1.5">Product Screenshots Gallery Upload (Multiple Files)</label>
+                            <x-form.file name="screenshots_files[]" multiple accept="image/*" />
+                            @if(count($product->gallery_urls) > 0)
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    @foreach($product->gallery_urls as $gUrl)
+                                        <img src="{{ $gUrl }}" class="w-12 h-12 rounded-xl object-cover border border-theme" alt="Gallery item">
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
                     <!-- Main Thumbnail -->
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-theme-main uppercase tracking-wider mb-2">Main Product Thumbnail Image URL</label>
+                        <label class="block text-xs font-bold text-theme-main uppercase tracking-wider mb-2">Or External Product Thumbnail Image URL</label>
                         <input type="url" name="thumbnail" value="{{ old('thumbnail', $product->thumbnail) }}" class="w-full px-4 py-2.5 text-sm rounded-xl bg-theme-main border border-theme text-theme-main focus:outline-hidden focus:border-theme-primary">
                     </div>
 

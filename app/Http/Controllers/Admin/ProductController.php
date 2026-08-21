@@ -96,6 +96,53 @@ class ProductController extends Controller
 
         $product = Product::create($validated);
 
+        // Process Polymorphic Media File Uploads
+        if ($request->hasFile('thumbnail_file')) {
+            $file = $request->file('thumbnail_file');
+            $path = $file->store('products/thumbnails', 'public');
+
+            \App\Modules\Media\Models\Media::create([
+                'mediable_id' => $product->id,
+                'mediable_type' => get_class($product),
+                'disk' => 'public',
+                'collection_name' => 'thumbnail',
+                'original_name' => $file->getClientOriginalName(),
+                'file_name' => basename($path),
+                'mime_type' => $file->getClientMimeType(),
+                'extension' => $file->getClientOriginalExtension(),
+                'size' => $file->getSize(),
+                'path' => $path,
+                'is_primary' => true,
+            ]);
+
+            $product->update(['thumbnail' => $path]);
+        }
+
+        if ($request->hasFile('screenshots_files')) {
+            $uploadedPaths = [];
+            foreach ($request->file('screenshots_files') as $file) {
+                if ($file->isValid()) {
+                    $path = $file->store('products/screenshots', 'public');
+                    $uploadedPaths[] = $path;
+
+                    \App\Modules\Media\Models\Media::create([
+                        'mediable_id' => $product->id,
+                        'mediable_type' => get_class($product),
+                        'disk' => 'public',
+                        'collection_name' => 'gallery',
+                        'original_name' => $file->getClientOriginalName(),
+                        'file_name' => basename($path),
+                        'mime_type' => $file->getClientMimeType(),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'size' => $file->getSize(),
+                        'path' => $path,
+                        'is_primary' => false,
+                    ]);
+                }
+            }
+            $product->update(['screenshots' => $uploadedPaths]);
+        }
+
         if ($request->wantsJson()) {
             return self::success('Product created successfully', compact('product'), 201);
         }
@@ -133,7 +180,9 @@ class ProductController extends Controller
             'apk_url' => 'nullable|url',
             'testflight_url' => 'nullable|url',
             'thumbnail' => 'nullable|string',
+            'thumbnail_file' => 'nullable|image|max:5120',
             'screenshots' => 'nullable|array',
+            'screenshots_files.*' => 'nullable|image|max:5120',
 
             // Arrays
             'tech_stack' => 'nullable|array',
@@ -158,6 +207,52 @@ class ProductController extends Controller
         }
 
         $product->update($validated);
+
+        if ($request->hasFile('thumbnail_file')) {
+            $file = $request->file('thumbnail_file');
+            $path = $file->store('products/thumbnails', 'public');
+
+            \App\Modules\Media\Models\Media::create([
+                'mediable_id' => $product->id,
+                'mediable_type' => get_class($product),
+                'disk' => 'public',
+                'collection_name' => 'thumbnail',
+                'original_name' => $file->getClientOriginalName(),
+                'file_name' => basename($path),
+                'mime_type' => $file->getClientMimeType(),
+                'extension' => $file->getClientOriginalExtension(),
+                'size' => $file->getSize(),
+                'path' => $path,
+                'is_primary' => true,
+            ]);
+
+            $product->update(['thumbnail' => $path]);
+        }
+
+        if ($request->hasFile('screenshots_files')) {
+            $uploadedPaths = is_array($product->screenshots) ? $product->screenshots : [];
+            foreach ($request->file('screenshots_files') as $file) {
+                if ($file->isValid()) {
+                    $path = $file->store('products/screenshots', 'public');
+                    $uploadedPaths[] = $path;
+
+                    \App\Modules\Media\Models\Media::create([
+                        'mediable_id' => $product->id,
+                        'mediable_type' => get_class($product),
+                        'disk' => 'public',
+                        'collection_name' => 'gallery',
+                        'original_name' => $file->getClientOriginalName(),
+                        'file_name' => basename($path),
+                        'mime_type' => $file->getClientMimeType(),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'size' => $file->getSize(),
+                        'path' => $path,
+                        'is_primary' => false,
+                    ]);
+                }
+            }
+            $product->update(['screenshots' => array_values(array_unique($uploadedPaths))]);
+        }
 
         if ($request->wantsJson()) {
             return self::success('Product updated successfully', compact('product'));

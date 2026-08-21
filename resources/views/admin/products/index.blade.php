@@ -79,8 +79,8 @@
                                 <!-- Title & Category -->
                                 <td class="p-4">
                                     <div class="flex items-center gap-3">
-                                        @if($product->thumbnail)
-                                            <img src="{{ $product->thumbnail }}" class="w-12 h-12 rounded-xl object-cover border border-theme shrink-0" alt="{{ $product->title }}">
+                                        @if($product->thumbnail_url)
+                                            <img src="{{ $product->thumbnail_url }}" class="w-12 h-12 rounded-xl object-cover border border-theme shrink-0" alt="{{ $product->title }}">
                                         @else
                                             <div class="w-12 h-12 rounded-xl bg-theme-primary/10 text-theme-primary flex items-center justify-center font-bold shrink-0">
                                                 {{ strtoupper(substr($product->title, 0, 2)) }}
