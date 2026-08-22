@@ -1,5 +1,5 @@
 <x-layouts.admin>
-    <div class="space-y-6 max-w-5xl mx-auto" x-data="{ 
+    <div class="space-y-6 max-w-7xl mx-auto" x-data="{ 
         step: 1,
         productType: '{{ old('type', $product->type) }}',
         techStack: {{ json_encode(old('tech_stack', $product->tech_stack ?? ['Laravel', 'TailwindCSS'])) }},
@@ -42,8 +42,8 @@
             this.features.splice(index, 1);
         }
     }">
-        <!-- Page Header & Back Button -->
-        <div class="flex items-center justify-between">
+        <!-- Page Header & Actions -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <a href="{{ route('admin.products.index') }}" class="p-2 rounded-xl bg-theme-card border border-theme text-theme-muted hover:text-theme-main transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -53,10 +53,30 @@
                     <p class="text-xs text-theme-muted">Update product specifications, demos, and contact channels.</p>
                 </div>
             </div>
-            <div class="text-xs font-bold text-theme-primary px-3 py-1.5 rounded-xl bg-theme-primary/10 border border-theme-primary/20">
-                Step <span x-text="step"></span> of 4
+            <div class="flex items-center gap-3">
+                <div class="text-xs font-bold text-theme-primary px-3 py-2 rounded-xl bg-theme-primary/10 border border-theme-primary/20">
+                    Step <span x-text="step"></span> of 4
+                </div>
+                <button type="button" onclick="document.getElementById('product-edit-form').submit()" class="px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors shadow-md flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Save & Update
+                </button>
             </div>
         </div>
+
+        @if ($errors->any())
+            <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 space-y-2">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Validation Failed! Please fix the following errors:</span>
+                </div>
+                <ul class="list-disc list-inside text-xs space-y-1 pl-2">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <!-- 4-STEP WIZARD PROGRESS BAR -->
         <div class="bg-theme-card p-4 rounded-2xl border border-theme shadow-xs">
@@ -116,7 +136,7 @@
         </div>
 
         <!-- FORM CONTAINER -->
-        <form method="POST" action="{{ route('admin.products.update', $product) }}" enctype="multipart/form-data" class="bg-theme-card p-6 md:p-8 rounded-2xl border border-theme shadow-xs space-y-6">
+        <form id="product-edit-form" method="POST" action="{{ route('admin.products.update', $product) }}" enctype="multipart/form-data" class="bg-theme-card p-6 md:p-8 rounded-2xl border border-theme shadow-xs space-y-6">
             @csrf
             @method('PUT')
 
@@ -465,9 +485,9 @@
                     </button>
 
                     <button type="submit" 
-                            x-show="step === 4" 
-                            class="px-6 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors shadow-lg">
-                        ✓ Update Product Changes
+                            class="px-6 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors shadow-lg flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Update Product Changes
                     </button>
                 </div>
             </div>

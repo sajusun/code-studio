@@ -1,5 +1,5 @@
 <x-layouts.admin>
-    <div class="space-y-6 max-w-5xl mx-auto">
+    <div class="space-y-6 max-w-7xl mx-auto">
         <!-- Header & Navigation -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -35,8 +35,8 @@
             <div class="lg:col-span-2 space-y-6">
                 <!-- Thumbnail & Overview -->
                 <x-card class="p-6">
-                    @if($product->thumbnail)
-                        <img src="{{ $product->thumbnail }}" class="w-full h-64 object-cover rounded-xl border border-theme mb-6" alt="{{ $product->title }}">
+                    @if($product->thumbnail_url)
+                        <img src="{{ $product->thumbnail_url }}" class="w-full h-64 object-cover rounded-xl border border-theme mb-6" alt="{{ $product->title }}">
                     @endif
 
                     <h3 class="text-base font-bold text-theme-main mb-2">Summary Overview</h3>
@@ -51,10 +51,10 @@
                 </x-card>
 
                 <!-- Screenshots Gallery -->
-                @if(!empty($product->screenshots) && count(array_filter($product->screenshots)) > 0)
+                @if(count($product->gallery_urls) > 0)
                     <x-card title="Screenshots Gallery">
                         <div class="grid grid-cols-2 gap-4">
-                            @foreach(array_filter($product->screenshots) as $img)
+                            @foreach($product->gallery_urls as $img)
                                 <a href="{{ $img }}" target="_blank" class="group relative rounded-xl overflow-hidden border border-theme">
                                     <img src="{{ $img }}" class="w-full h-36 object-cover group-hover:scale-105 transition-transform" alt="Screenshot">
                                 </a>

@@ -45,8 +45,8 @@
             this.features.splice(index, 1);
         }
     }">
-        <!-- Page Header & Back Button -->
-        <div class="flex items-center justify-between">
+        <!-- Page Header & Actions -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <a href="{{ route('admin.products.index') }}" class="p-2 rounded-xl bg-theme-card border border-theme text-theme-muted hover:text-theme-main transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -60,6 +60,20 @@
                 Step <span x-text="step"></span> of 4
             </div>
         </div>
+
+        @if ($errors->any())
+            <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 space-y-2">
+                <div class="flex items-center gap-2 font-bold text-sm">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Validation Failed! Please fix the following errors:</span>
+                </div>
+                <ul class="list-disc list-inside text-xs space-y-1 pl-2">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <!-- 4-STEP WIZARD PROGRESS BAR -->
         <div class="bg-theme-card p-4 rounded-2xl border border-theme shadow-xs">

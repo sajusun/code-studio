@@ -58,17 +58,37 @@ class Product extends Model
         });
     }
 
+    private function formatMediaUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        $cleanPath = ltrim($path, '/');
+        if (Str::startsWith($cleanPath, 'storage/')) {
+            return asset($cleanPath);
+        }
+
+        if (Str::startsWith($cleanPath, 'public/')) {
+            $cleanPath = Str::after($cleanPath, 'public/');
+        }
+
+        return asset('storage/' . $cleanPath);
+    }
+
     public function getThumbnailUrlAttribute(): ?string
     {
         $media = $this->firstMedia('thumbnail');
         if ($media) {
-            return asset('storage/' . $media->path);
+            return $this->formatMediaUrl($media->path);
         }
 
         if (!empty($this->thumbnail)) {
-            return Str::startsWith($this->thumbnail, ['http://', 'https://']) 
-                ? $this->thumbnail 
-                : asset('storage/' . $this->thumbnail);
+            return $this->formatMediaUrl($this->thumbnail);
         }
 
         return null;
@@ -78,13 +98,11 @@ class Product extends Model
     {
         $galleryMedia = $this->mediaCollection('gallery')->get();
         if ($galleryMedia->isNotEmpty()) {
-            return $galleryMedia->map(fn($m) => asset('storage/' . $m->path))->toArray();
+            return $galleryMedia->map(fn($m) => $this->formatMediaUrl($m->path))->filter()->values()->toArray();
         }
 
         if (is_array($this->screenshots) && count($this->screenshots) > 0) {
-            return array_map(function($path) {
-                return Str::startsWith($path, ['http://', 'https://']) ? $path : asset('storage/' . $path);
-            }, $this->screenshots);
+            return array_map(fn($path) => $this->formatMediaUrl($path), array_filter($this->screenshots));
         }
 
         return [];
