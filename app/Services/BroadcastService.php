@@ -3,18 +3,14 @@
 namespace App\Services;
 
 use App\Models\Notification;
-use Illuminate\Support\Facades\Log;
+use App\Events\NotificationCreated;
+use App\Events\NotificationSent;
 
 class BroadcastService
 {
-    public function send(Notification $notification): bool
+    public function send(Notification $notification): void
     {
-        try {
-            Log::info("WebSockets Broadcast Event fired for User #{$notification->user_id}: {$notification->title}");
-            return true;
-        } catch (\Throwable $e) {
-            Log::error("Broadcast Error: " . $e->getMessage());
-            return false;
-        }
+        broadcast(new NotificationCreated($notification))->toOthers();
+        broadcast(new NotificationSent($notification));
     }
 }

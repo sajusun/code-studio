@@ -29,6 +29,15 @@ class NotificationSent implements ShouldBroadcastNow
         ];
     }
 
+    /**
+     * The event's broadcast name.
+     * Frontend listens with: .listen('.NotificationSent', ...)
+     */
+    public function broadcastAs(): string
+    {
+        return 'NotificationSent';
+    }
+
     public function broadcastWith(): array
     {
         return [
