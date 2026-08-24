@@ -3,53 +3,83 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\NotificationResource;
+use App\Models\Notification;
+use App\Services\NotificationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class NotificationsController extends Controller
 {
-    public function index(Request $request): array
+    public function __construct(
+        protected NotificationService $service
+    ) {}
+
+    /**
+     * List user notifications
+     */
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $user = $request->user();
+        $userId = $request->user()->id;
+        $perPage = $request->integer('per_page', 15);
 
-        $notifications = $user->notifications()
-            ->limit(50)
-            ->get();
+        $notifications = Notification::where('user_id', $userId)
+            ->latest()
+            ->paginate($perPage);
 
-        $unreadCount = $user->unreadNotifications()->count();
-
-        return [
-            'data' => $notifications->map(fn ($n) => [
-                'id' => $n->id,
-                'type' => $n->data['type'] ?? 'general',
-                'target_id' => $n->data['target_id'] ?? null,
-                'title' => $n->data['title'] ?? 'Notification',
-                'message' => $n->data['message'] ?? '',
-                'read_at' => $n->read_at?->toIso8601String(),
-                'created_at' => $n->created_at?->toIso8601String(),
-            ]),
-            'unread_count' => $unreadCount,
-        ];
+        return NotificationResource::collection($notifications);
     }
 
-    public function markAsRead(Request $request, string $id): array
+    /**
+     * Get unread count
+     */
+    public function unreadCount(Request $request): JsonResponse
     {
-        $notification = $request->user()
-            ->notifications()
-            ->findOrFail($id);
-
-        $notification->markAsRead();
-
-        return [
+        return response()->json([
             'success' => true,
-        ];
+            'count'   => $this->service->unreadCount($request->user()->id),
+        ]);
     }
 
-    public function markAllAsRead(Request $request): array
+    /**
+     * Mark single notification as read
+     */
+    public function markAsRead(Request $request, string $id): JsonResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $this->service->markAsRead($id, $request->user()->id);
 
-        return [
+        return response()->json([
             'success' => true,
-        ];
+            'message' => 'Notification marked as read.',
+        ]);
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllAsRead(Request $request): JsonResponse
+    {
+        $this->service->markAllAsRead($request->user()->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All notifications marked as read.',
+        ]);
+    }
+
+    /**
+     * Delete notification
+     */
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        Notification::where('user_id', $request->user()->id)
+            ->where('id', $id)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification deleted successfully.',
+        ]);
     }
 }
