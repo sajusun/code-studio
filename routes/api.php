@@ -6,6 +6,9 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\PublicDeveloperController;
+use App\Http\Controllers\Api\Admin\DeveloperController;
+use App\Http\Controllers\Api\Admin\DeveloperRoleController;
 use App\Modules\Auth\Http\Controllers\AuthController;
 use App\Modules\Room\Http\Controllers\RoomController;
 use App\Modules\Stay\Http\Controllers\StayController;
@@ -45,13 +48,36 @@ Route::prefix('v1')->group(function () {
     // Public Newsletter Subscribe
     Route::post('newsletter/subscribe', [NewsletterSubscriberController::class, 'store']);
 
-    // Public guest routes
+    // Public showcase & guest routes
     Route::prefix('public')->group(function () {
+        Route::get('products', [\App\Http\Controllers\Api\PublicProductController::class, 'index']);
+        Route::get('products/featured', [\App\Http\Controllers\Api\PublicProductController::class, 'featured']);
+        Route::get('products/{slug}', [\App\Http\Controllers\Api\PublicProductController::class, 'show']);
         Route::get('room-types', [RoomController::class, 'roomTypes']);
         Route::get('availability', [ReservationController::class, 'searchAvailability']);
         Route::post('reservations', [ReservationController::class, 'storePublic']);
         Route::post('support/contact', [SupportController::class, 'createConversation']);
+        // Public developer showcase
+        Route::get('developers', [PublicDeveloperController::class, 'index']);
+        Route::get('developers/{developer}', [PublicDeveloperController::class, 'show']);
+        Route::get('developer-roles', [PublicDeveloperController::class, 'roles']);
     });
+
+    // ── Admin Management Routes ───────────────────────────────────────────────
+    Route::prefix('admin')
+        ->middleware(['auth:sanctum', 'role:admin'])
+        ->group(function () {
+            // Developer Role Types (specializations)
+            Route::apiResource('developer-roles', DeveloperRoleController::class);
+
+            // Developer Profiles
+            Route::get('developers', [DeveloperController::class, 'index']);
+            Route::post('developers', [DeveloperController::class, 'store']);
+            Route::get('developers/{developer}', [DeveloperController::class, 'show']);
+            Route::put('developers/{developer}', [DeveloperController::class, 'update']);
+            Route::delete('developers/{developer}', [DeveloperController::class, 'destroy']);
+            Route::patch('developers/{developer}/status', [DeveloperController::class, 'updateStatus']);
+        });
 
     // Auth Routes
     Route::post('api-login', [AuthController::class, 'apiLogin']);

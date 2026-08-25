@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             HmsSeeder::class,
             TagsTableSeeder::class,
             AmenitiesTableSeeder::class,
+            ProductSeeder::class,
+            DeveloperRolesSeeder::class,
         ]);
 
         // Optionally, create an admin user
