@@ -77,7 +77,25 @@ Route::prefix('v1')->group(function () {
             Route::put('developers/{developer}', [DeveloperController::class, 'update']);
             Route::delete('developers/{developer}', [DeveloperController::class, 'destroy']);
             Route::patch('developers/{developer}/status', [DeveloperController::class, 'updateStatus']);
+
+            // Client Projects Admin Management
+            Route::get('client-projects', [\App\Http\Controllers\Api\Admin\AdminProjectController::class, 'index']);
+            Route::post('client-projects', [\App\Http\Controllers\Api\Admin\AdminProjectController::class, 'store']);
+            Route::put('client-projects/{id}', [\App\Http\Controllers\Api\Admin\AdminProjectController::class, 'update']);
+            Route::post('client-projects/{id}/milestones', [\App\Http\Controllers\Api\Admin\AdminProjectController::class, 'addMilestone']);
         });
+
+    // ── Client Portal Routes (Private Access) ──────────────────────────────────
+    Route::prefix('client')->group(function () {
+        Route::post('login', [AuthController::class, 'apiLogin']);
+
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('me', [\App\Http\Controllers\Api\Client\ClientPortalController::class, 'me']);
+            Route::get('projects', [\App\Http\Controllers\Api\Client\ClientPortalController::class, 'projects']);
+            Route::get('projects/{code}', [\App\Http\Controllers\Api\Client\ClientPortalController::class, 'projectDetails']);
+            Route::post('projects/{id}/messages', [\App\Http\Controllers\Api\Client\ClientPortalController::class, 'sendMessage']);
+        });
+    });
 
     // Auth Routes
     Route::post('api-login', [AuthController::class, 'apiLogin']);
