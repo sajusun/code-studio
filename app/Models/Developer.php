@@ -68,6 +68,17 @@ class Developer extends Model
         );
     }
 
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'developer_product',
+            'developer_id',
+            'product_id'
+        )->withPivot('role_in_project', 'sort_order')
+         ->withTimestamps();
+    }
+
     // ── Scopes ────────────────────────────────────────────────────────────────
 
     public function scopePublished(Builder $query): Builder

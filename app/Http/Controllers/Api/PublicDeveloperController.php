@@ -20,7 +20,7 @@ class PublicDeveloperController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Developer::published()->with('roles');
+        $query = Developer::published()->with(['roles', 'products' => fn ($q) => $q->where('is_active', true)]);
 
         // Filter by role slug (e.g. ?role=flutter-developer)
         if ($request->filled('role')) {
@@ -40,16 +40,21 @@ class PublicDeveloperController extends Controller
     }
 
     /**
-     * GET /api/v1/public/developers/{developer}
-     * Show a single published developer's public profile.
+     * GET /api/v1/public/developers/{identifier}
+     * Show a single published developer by ID or Slug.
      */
-    public function show(Developer $developer)
+    public function show(string $identifier)
     {
-        if ($developer->status !== 'published') {
-            abort(404);
-        }
-
-        $developer->load('roles');
+        $developer = Developer::published()
+            ->with(['roles', 'products' => fn ($q) => $q->where('is_active', true)])
+            ->where(function ($q) use ($identifier) {
+                if (is_numeric($identifier)) {
+                    $q->where('id', (int) $identifier);
+                } else {
+                    $q->where('slug', $identifier);
+                }
+            })
+            ->firstOrFail();
 
         return self::success('Developer', new DeveloperResource($developer));
     }

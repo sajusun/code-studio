@@ -29,8 +29,26 @@ class DeveloperResource extends JsonResource
             'roles' => DeveloperRoleResource::collection(
                 $this->whenLoaded('roles')
             ),
+            // Products as summary objects (when loaded)
+            'products' => $this->whenLoaded('products', function () {
+                return $this->products->map(function ($product) {
+                    return [
+                        'id' => $product->id,
+                        'title' => $product->title,
+                        'slug' => $product->slug,
+                        'type' => $product->type,
+                        'category' => $product->category,
+                        'price' => $product->price,
+                        'short_description' => $product->short_description,
+                        'thumbnail_url' => $product->thumbnail_url,
+                        'tech_stack' => $product->tech_stack,
+                        'role_in_project' => $product->pivot?->role_in_project,
+                    ];
+                });
+            }),
             // Counts (when counted)
             'roles_count' => $this->whenCounted('roles'),
+            'products_count' => $this->whenCounted('products'),
             'created_at'  => $this->created_at?->toDateTimeString(),
             'updated_at'  => $this->updated_at?->toDateTimeString(),
         ];

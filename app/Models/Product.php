@@ -129,4 +129,15 @@ class Product extends Model
             default => ucfirst($this->type),
         };
     }
+
+    public function developers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            Developer::class,
+            'developer_product',
+            'product_id',
+            'developer_id'
+        )->withPivot('role_in_project', 'sort_order')
+         ->withTimestamps();
+    }
 }

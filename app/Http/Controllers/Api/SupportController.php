@@ -74,6 +74,14 @@ class SupportController extends Controller
 
     public function createConversation(Request $request): array
     {
+        // Normalize email/name field aliases if sent from frontend contact/quote forms
+        if (!$request->has('customer_email') && $request->has('email')) {
+            $request->merge(['customer_email' => $request->input('email')]);
+        }
+        if (!$request->has('customer_name') && $request->has('name')) {
+            $request->merge(['customer_name' => $request->input('name')]);
+        }
+
         $validated = $request->validate([
             'customer_email' => ['required', 'email', 'max:190'],
             'customer_name' => ['nullable', 'string', 'max:190'],
@@ -82,7 +90,7 @@ class SupportController extends Controller
         ]);
 
         $conv = SupportConversation::query()->create([
-            'subject' => $validated['subject'] ?? null,
+            'subject' => $validated['subject'] ?? 'New Inquiry',
             'status' => 'open',
             'customer_email' => strtolower($validated['customer_email']),
             'customer_name' => $validated['customer_name'] ?? null,
@@ -99,12 +107,20 @@ class SupportController extends Controller
             'received_at' => now(),
         ]);
 
-        $admins = User::whereIn('role', ['admin', 'help_desk'])->get();
-        Notification::send($admins, new NewSupportTicket($conv));
+        try {
+            $admins = User::whereIn('role', ['admin', 'help_desk'])->get();
+            if ($admins->isNotEmpty()) {
+                Notification::send($admins, new NewSupportTicket($conv));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to dispatch support ticket notification: ' . $e->getMessage());
+        }
 
         return [
+            'success' => true,
             'data' => [
                 'id' => $conv->id,
+                'message' => 'Your message has been received successfully.',
             ],
         ];
     }

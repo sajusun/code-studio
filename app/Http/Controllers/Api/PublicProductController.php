@@ -75,7 +75,10 @@ class PublicProductController extends Controller
      */
     public function show(string $slug): JsonResponse
     {
-        $product = Product::where('slug', $slug)
+        $product = Product::with(['developers' => function ($q) {
+                $q->published()->with('roles');
+            }])
+            ->where('slug', $slug)
             ->where('is_active', true)
             ->first();
 
@@ -101,6 +104,21 @@ class PublicProductController extends Controller
             'product' => array_merge($product->toArray(), [
                 'thumbnail_url' => $product->thumbnail_url,
                 'gallery_urls'  => $product->gallery_urls,
+                'developers'    => $product->developers->map(fn($d) => [
+                    'id'               => $d->id,
+                    'name'             => $d->name,
+                    'slug'             => $d->slug,
+                    'bio'              => $d->bio,
+                    'avatar'           => $d->avatar,
+                    'experience_years' => $d->experience_years,
+                    'role_in_project'  => $d->pivot?->role_in_project ?? 'Lead Developer',
+                    'roles'            => $d->roles->map(fn($r) => [
+                        'id'    => $r->id,
+                        'name'  => $r->name,
+                        'slug'  => $r->slug,
+                        'color' => $r->color,
+                    ]),
+                ]),
             ]),
             'related' => $related->map(fn($r) => array_merge($r->toArray(), [
                 'thumbnail_url' => $r->thumbnail_url,
