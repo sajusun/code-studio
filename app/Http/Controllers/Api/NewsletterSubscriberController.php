@@ -44,10 +44,18 @@ class NewsletterSubscriberController extends Controller
             'email' => strtolower($validated['email']),
         ]);
 
-        $admins = User::whereIn('role', ['admin', 'help_desk'])->get();
-        Notification::send($admins, new NewNewsletterSubscriber($subscriber));
+        try {
+            $admins = User::whereIn('role', ['admin', 'help_desk'])->get();
+            if ($admins->isNotEmpty()) {
+                Notification::send($admins, new NewNewsletterSubscriber($subscriber));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to dispatch newsletter notification: ' . $e->getMessage());
+        }
 
         return [
+            'success' => true,
+            'message' => 'Successfully subscribed to the newsletter!',
             'data' => [
                 'id' => $subscriber->id,
                 'email' => $subscriber->email,

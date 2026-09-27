@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AccountSettingsController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\BroadcastTestController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -44,16 +45,26 @@ Route::middleware([\App\Http\Middleware\HeadlessMiddleware::class])->group(funct
             // Activity Logs Route
             Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
-            // Realtime Notification Routes
-            Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
-            Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-            Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
-            Route::delete('notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-            Route::delete('notifications', [NotificationController::class, 'destroyAll'])->name('notifications.destroy-all');
+            // Realtime Notification Routes (reference pattern)
+            Route::controller(NotificationController::class)
+                ->prefix('notifications')
+                ->name('notifications.')
+                ->group(function () {
+                    Route::get('/',                 'index')        ->name('index');
+                    Route::post('read/{id}',        'markAsRead')   ->name('read');
+                    Route::post('read-all',         'markAllAsRead')->name('read-all');
+                    Route::delete('delete/{id}',    'destroy')      ->name('delete');
+                    Route::delete('delete-all',     'destroyAll')   ->name('delete-all');
+                });
 
             Route::resource('users', UserController::class);
             Route::resource('roles', RoleController::class);
             Route::resource('products', ProductController::class);
+
+            // Broadcast / Reverb Test Routes
+            Route::get('broadcast-test', [BroadcastTestController::class, 'index'])->name('broadcast-test.index');
+            Route::post('broadcast-test/public', [BroadcastTestController::class, 'testPublicBroadcast'])->name('broadcast-test.public');
+            Route::post('broadcast-test/notification', [BroadcastTestController::class, 'testNotificationBroadcast'])->name('broadcast-test.notification');
         });
     });
 });

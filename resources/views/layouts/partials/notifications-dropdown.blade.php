@@ -56,7 +56,7 @@
              if (item && !item.read) {
                  item.read = true;
                  if (this.unreadCount > 0) this.unreadCount--;
-                 fetch(`{{ url('admin/notifications') }}/${id}/read`, {
+                 fetch(`{{ url('admin/notifications/read') }}/${id}`, {
                      method: 'POST',
                      headers: { 
                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -84,7 +84,7 @@
                  this.unreadCount--;
              }
              this.notifications = this.notifications.filter(n => n.id !== id);
-             fetch(`{{ url('admin/notifications') }}/${id}`, {
+             fetch(`{{ url('admin/notifications/delete') }}/${id}`, {
                  method: 'DELETE',
                  headers: { 
                      'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -117,7 +117,7 @@
              this.notifications = [];
              this.unreadCount = 0;
              try {
-                 const res = await fetch('{{ route('admin.notifications.destroy-all') }}', {
+                 const res = await fetch('{{ route('admin.notifications.delete-all') }}', {
                      method: 'DELETE',
                      headers: { 
                          'X-CSRF-TOKEN': '{{ csrf_token() }}',
