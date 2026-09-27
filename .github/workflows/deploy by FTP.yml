@@ -18,3 +18,8 @@ jobs:
           username: thewarriors@robertcravat.thewarriors.team
           password: jtgAl[Kt31ld7_Ro
           port: 21
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/dist/**
+            dist/**
